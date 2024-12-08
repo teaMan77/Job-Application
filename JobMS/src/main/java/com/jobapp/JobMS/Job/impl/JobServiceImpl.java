@@ -10,6 +10,7 @@ import com.jobapp.JobMS.Job.dto.JobDTO;
 import com.jobapp.JobMS.Job.external.Company;
 import com.jobapp.JobMS.Job.external.Review;
 import com.jobapp.JobMS.Job.mapper.JobMapper;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
@@ -17,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -41,6 +43,7 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
+    @CircuitBreaker(name = "companyBreaker", fallbackMethod = "companyFallback")
     public List<JobDTO> findAll() {
         List<Job> jobs = jobRepository.findAll();
 
@@ -104,5 +107,11 @@ public class JobServiceImpl implements JobService {
         List<Review> reviews = reviewClient.getReviews(job.getCompanyId());
         
         return JobMapper.mapToJobWithCompanyDTO(job, company, reviews);
+    }
+
+    public List<String> companyFallback(Exception e) {
+        List<String> list = new ArrayList<>();
+        list.add("Company Service is down at the moment!");
+        return list;
     }
 }
