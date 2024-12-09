@@ -48,6 +48,83 @@ services:
     networks:
       - my_network
 
+  configserver-ms:
+    image: tracerb/configserver:latest
+    container_name: configserver
+    ports:
+      - "8080:8080"
+    depends_on:
+      - servicereg
+    networks:
+      - my_network
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+  servicereg:
+    image: tracerb/servicereg:latest
+    container_name: servicereg
+    ports:
+      - "8761:8761"
+    depends_on:
+      - rabbitmq
+      - zipkin
+      - postgres
+      - pgadmin
+    networks:
+      - my_network
+
+  companyms:
+    image: tracerb/companyms:latest
+    container_name: company
+    ports:
+      - "8082:8082"
+    depends_on:
+      - servicereg
+      - configserver-ms
+    networks:
+      - my_network
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+  jobms:
+    image: tracerb/jobms:latest
+    container_name: job
+    ports:
+      - "8081:8081"
+    depends_on:
+      - servicereg
+      - configserver-ms
+    networks:
+      - my_network
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://servicereg:8761/eureka
+
+  reviewms:
+    image: tracerb/reviewms:latest
+    container_name: review
+    ports:
+      - "8083:8083"
+    depends_on:
+      - servicereg
+      - configserver-ms
+    networks:
+      - my_network
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+  gateway-ms:
+    image: tracerb/gateway:latest
+    container_name: gateway
+    ports:
+      - "8084:8084"
+    depends_on:
+      - servicereg
+    networks:
+      - my_network
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
 volumes:
   postgres_data:
 
