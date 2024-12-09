@@ -3,6 +3,9 @@ package com.jobapp.CompanyMS.Company.impl;
 import com.jobapp.CompanyMS.Company.Company;
 import com.jobapp.CompanyMS.Company.CompanyRepository;
 import com.jobapp.CompanyMS.Company.CompanyService;
+import com.jobapp.CompanyMS.Company.clients.ReviewClient;
+import com.jobapp.CompanyMS.Company.dto.ReviewMessage;
+import jakarta.ws.rs.NotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,9 +15,12 @@ import java.util.Optional;
 public class CompanyServiceImpl implements CompanyService {
 
     CompanyRepository companyRepository;
+    ReviewClient reviewClient;
 
-    public CompanyServiceImpl(CompanyRepository companyRepository) {
+    public CompanyServiceImpl(CompanyRepository companyRepository,
+                              ReviewClient reviewClient) {
         this.companyRepository = companyRepository;
+        this.reviewClient = reviewClient;
     }
 
     @Override
@@ -53,5 +59,17 @@ public class CompanyServiceImpl implements CompanyService {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public void updateCompanyRating(ReviewMessage reviewMessage) {
+        System.out.println(reviewMessage.getDescription());
+
+        Company company = companyRepository.findById(reviewMessage.getCompanyId())
+                .orElseThrow(() -> new NotFoundException("Company Not Found: "
+                        + reviewMessage.getCompanyId()));
+        Double avgRating = reviewClient.getAverageRatingForCompany(reviewMessage.getCompanyId());
+        company.setRating(avgRating);
+        companyRepository.save(company);
     }
 }

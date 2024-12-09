@@ -36,6 +36,18 @@ services:
     networks:
       - my_network
 
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"   # AMQP port for messaging
+      - "15672:15672" # Management UI port
+    environment:
+      RABBITMQ_DEFAULT_USER: admin   # Default username
+      RABBITMQ_DEFAULT_PASS: admin   # Default password
+    networks:
+      - my_network
+
 volumes:
   postgres_data:
 
